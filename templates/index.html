@@ -1,0 +1,99 @@
+<!-- templates/index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroFlow - Web</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f4f4f9; color: #333; margin: 40px; }
+        h1, h2 { color: #444; }
+        .container { display: flex; gap: 40px; }
+        .panel { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        ul { list-style-type: none; padding: 0; }
+        li { padding: 8px; border-bottom: 1px solid #eee; }
+        form { display: flex; flex-direction: column; gap: 10px; }
+        input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 10px; border: none; border-radius: 4px; background-color: #007bff; color: white; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+
+    <h1>AgroFlow - Web Version</h1>
+
+    <div class="container">
+
+        <!-- Customer List Panel -->
+        <div class="panel">
+            <h2>Customer List</h2>
+            <ul id="customer-list">
+                <!-- Customers will be added here by JavaScript -->
+            </ul>
+        </div>
+
+        <!-- Add Customer Panel -->
+        <div class="panel">
+            <h2>Add New Customer</h2>
+            <form id="add-customer-form">
+                <input type="text" id="name" placeholder="Name (Required)" required>
+                <input type="email" id="email" placeholder="Email">
+                <input type="tel" id="phone" placeholder="Phone">
+                <button type="submit">Add Customer</button>
+            </form>
+            <p id="form-message" style="color: green;"></p>
+        </div>
+
+    </div>
+
+    <script>
+        // This JavaScript runs in the user's browser
+
+        // Function to fetch customers from our Flask backend and display them
+        async function fetchAndDisplayCustomers() {
+            const response = await fetch('/api/customers');
+            const customers = await response.json();
+            
+            const customerList = document.getElementById('customer-list');
+            customerList.innerHTML = ''; // Clear the list first
+            
+            customers.forEach(customer => {
+                const li = document.createElement('li');
+                li.textContent = `${customer.name} - ${customer.email || 'No Email'}`;
+                customerList.appendChild(li);
+            });
+        }
+
+        // Function to handle the form submission
+        document.getElementById('add-customer-form').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Prevent the default form submission
+            
+            const newCustomer = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+            };
+
+            const response = await fetch('/api/customers/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(newCustomer),
+            });
+            
+            const result = await response.json();
+            
+            // Show a success message and refresh the list
+            document.getElementById('form-message').textContent = result.message;
+            this.reset(); // Clear the form fields
+            fetchAndDisplayCustomers(); // Refresh the customer list
+        });
+
+        // Fetch and display customers when the page first loads
+        fetchAndDisplayCustomers();
+
+    </script>
+</body>
+</html>
